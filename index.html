@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1a1a2e">
+<title>NailBook 💅</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{--acc:#e94560;--acc-rgb:233,69,96;--gold:#f5c518;--ok:#5eead4;--glass:rgba(255,255,255,.08);--stroke:rgba(255,255,255,.15);--muted:rgba(255,255,255,.5);--safe-b:env(safe-area-inset-bottom,0px)}
+body{font-family:system-ui,-apple-system,sans-serif;background:linear-gradient(135deg,#1a1a2e,#16213e,#0f3460);color:#fff;height:100vh;height:100dvh;display:flex;flex-direction:column;overflow:hidden}
+button,input,select,textarea{font:inherit;color:inherit}button{cursor:pointer;border:none;background:none}
+select option{color:#000}
+.top{padding:18px 20px 8px;display:flex;justify-content:space-between;align-items:center}
+.eye{font-size:11px;text-transform:uppercase;color:var(--muted);font-weight:700;letter-spacing:.05em}
+.title{font-size:26px;font-weight:800;letter-spacing:-.5px}
+.av{position:relative;width:42px;height:42px;border-radius:14px;display:grid;place-items:center;background:var(--glass);border:1px solid var(--stroke)}
+.av input{position:absolute;inset:0;opacity:0;width:100%;height:100%}
+.strip{display:flex;gap:6px;padding:8px 20px;overflow-x:auto;scrollbar-width:none}.strip::-webkit-scrollbar{display:none}
+.day{flex:0 0 auto;width:48px;padding:8px 0;border-radius:12px;display:flex;flex-direction:column;align-items:center;background:rgba(255,255,255,.04);border:1px solid transparent}
+.day .d{font-size:10px;color:var(--muted);text-transform:uppercase;font-weight:700}
+.day .n{font-size:16px;font-weight:700}
+.day.active{background:rgba(var(--acc-rgb),.15);border-color:rgba(var(--acc-rgb),.5)}
+.day.active .n{color:var(--acc)}.day.today .n{color:var(--gold)}
+main{flex:1;overflow-y:auto;padding:4px 20px 90px}
+.view{display:none}.view.active{display:block;animation:up .3s ease}
+@keyframes up{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.swipe{position:relative;border-radius:16px;margin-bottom:10px;overflow:hidden}
+.swipe-bg{position:absolute;inset:0;background:linear-gradient(90deg,transparent,#e94560);display:flex;align-items:center;justify-content:flex-end;padding-right:20px;font-weight:700;opacity:0}
+.swipe.dragging .swipe-bg{opacity:1}
+.card{display:flex;align-items:center;gap:12px;padding:14px 40px 14px 16px;border-radius:16px;background:#1d2440;border:1px solid var(--stroke);position:relative}
+.card::before{content:"";position:absolute;left:0;top:10px;bottom:10px;width:4px;border-radius:4px;background:var(--stripe)}
+.card.done{border-color:rgba(94,234,212,.45)}
+.card .t{font-size:18px;font-weight:800;color:var(--gold);min-width:45px}
+.card .i{flex:1;min-width:0}
+.card .n{font-size:16px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card .m{font-size:12px;color:var(--muted);margin-top:2px}
+.pr{color:var(--gold);font-weight:700;margin-left:5px}
+.note{font-size:11px;color:var(--muted);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.del{position:absolute;right:10px;top:12px;width:24px;height:24px;border-radius:50%;background:rgba(255,255,255,.1);display:grid;place-items:center;font-size:14px}
+.actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.act{background:rgba(255,255,255,.1);padding:5px 10px;border-radius:8px;font-size:11px;font-weight:600}
+.act.on{background:rgba(94,234,212,.2);color:var(--ok)}
+.act:active{background:rgba(var(--acc-rgb),.3)}
+.empty{text-align:center;padding:36px 0}
+.empty-emoji{font-size:50px;margin-bottom:12px;display:inline-block;animation:bob 3s infinite}
+.empty-title{font-size:18px;font-weight:700}.empty-sub{font-size:13px;color:var(--muted);margin-top:6px}
+@keyframes bob{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-10px) rotate(3deg)}}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
+.kpi{background:rgba(255,255,255,.05);border:1px solid var(--stroke);border-radius:14px;padding:10px 6px;text-align:center}
+.kpi b{display:block;font-size:15px;font-weight:800}.kpi small{font-size:9px;color:var(--muted);text-transform:uppercase;font-weight:700}
+.g{color:var(--ok)}.r{color:#ff7a8a}.y{color:var(--gold)}
+.kpis2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.kpis2 .kpi b{font-size:19px}
+.search{width:100%;padding:12px 16px;border-radius:12px;background:var(--glass);border:1px solid var(--stroke);margin-bottom:12px;outline:none}
+.s-card{background:var(--glass);border:1px solid var(--stroke);border-radius:16px;padding:16px;margin-bottom:12px}
+.s-card h3{font-size:11px;text-transform:uppercase;color:var(--muted);margin-bottom:10px;letter-spacing:.05em}
+.swatches{display:flex;gap:10px}
+.sw{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;border:2px solid transparent}
+.sw span{width:18px;height:18px;border-radius:50%;background:var(--c)}.sw.active{border-color:#fff}
+.btn{width:100%;padding:14px;border-radius:12px;font-weight:700;text-align:center;margin-bottom:8px}
+.btn:active{transform:scale(.97)}
+.btn-p{background:var(--acc)}.btn-g{background:rgba(255,255,255,.06);border:1px solid var(--stroke)}.btn-d{background:#b3263f}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.stat{background:rgba(255,255,255,.04);border-radius:12px;padding:12px;text-align:center}
+.stat .n{font-size:18px;font-weight:800;color:var(--acc)}.stat .l{font-size:10px;color:var(--muted);margin-top:2px;text-transform:uppercase}
+.mnav{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.mnav button{width:40px;height:40px;border-radius:12px;background:var(--glass);border:1px solid var(--stroke);font-size:18px}
+.mnav b{font-size:17px}
+.bars{display:flex;align-items:flex-end;gap:2px;height:90px}
+.bar{flex:1;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center}
+.bar i{width:100%;background:var(--acc);border-radius:3px 3px 0 0;min-height:1px;opacity:.9}
+.bar b{font-size:7px;color:var(--muted);font-weight:600;margin-top:2px}
+.line{display:flex;justify-content:space-between;align-items:center;font-size:13px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.06);gap:8px}
+.line:last-child{border:0}.line small{color:var(--muted);font-size:11px}
+.meter{height:5px;border-radius:4px;background:rgba(255,255,255,.08);margin-top:4px;overflow:hidden}.meter i{display:block;height:100%;background:var(--acc)}
+.x{width:22px;height:22px;border-radius:50%;background:rgba(255,255,255,.1);font-size:12px;flex:0 0 auto}
+.fab{position:fixed;right:20px;bottom:calc(76px + var(--safe-b));width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--acc),rgba(var(--acc-rgb),.8));font-size:28px;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 24px -6px rgba(var(--acc-rgb),.8);z-index:10}
+.fab:active{transform:scale(.9)}
+.nav{display:flex;background:rgba(14,18,36,.95);border-top:1px solid var(--stroke);padding-bottom:var(--safe-b)}
+.nb{flex:1;padding:10px 0;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:10px;color:var(--muted);font-weight:700}
+.nb.active{color:var(--acc)}.nb .ic{font-size:18px}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;display:flex;align-items:flex-end;opacity:0;pointer-events:none;transition:.3s}
+.modal.open{opacity:1;pointer-events:auto}
+.sheet{width:100%;background:#1e243b;border-radius:24px 24px 0 0;padding:20px;padding-bottom:calc(20px + var(--safe-b));transform:translateY(100%);transition:transform .3s;max-height:92vh;overflow-y:auto}
+.modal.open .sheet{transform:none}
+.sheet-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.close{width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,.1);display:grid;place-items:center;flex:0 0 auto}
+.f{display:block;margin-bottom:10px}
+.f span{display:block;font-size:10px;color:var(--muted);text-transform:uppercase;margin-bottom:4px}
+.f input,.f select,.f textarea,.sv input{width:100%;padding:12px;border-radius:12px;background:rgba(255,255,255,.06);border:1px solid var(--stroke);outline:none}
+.row{display:flex;gap:8px}
+.ph{display:flex;align-items:center;border-radius:12px;background:rgba(255,255,255,.06);border:1px solid var(--stroke)}
+.ph em{font-style:normal;padding:0 4px 0 12px;font-weight:700;color:var(--gold)}
+.ph input{border:0!important;background:none!important;padding-left:6px!important}
+.sv{margin-bottom:8px;align-items:center}.sv input:last-of-type{max-width:100px}
+.toasts{position:fixed;top:20px;left:0;right:0;display:flex;flex-direction:column;align-items:center;pointer-events:none;z-index:200}
+.toast{background:#1e243b;border:1px solid var(--stroke);padding:12px 16px;border-radius:12px;margin-bottom:8px;font-size:13px;display:flex;gap:10px;align-items:center;pointer-events:auto;animation:up .3s}
+.toast-btn{background:rgba(233,69,96,.2);color:var(--acc);padding:4px 8px;border-radius:6px;font-weight:700}
+.hint{font-size:11px;color:var(--muted);margin-top:6px}
+</style>
+</head>
+<body>
+<header class="top">
+  <div><div class="eye" id="eye">—</div><h1 class="title" id="title">Сегодня</h1></div>
+  <label class="av">📆<input type="date" id="jump"></label>
+</header>
+<div class="strip" id="strip"></div>
+
+<main>
+  <section class="view active" id="v-today">
+    <div class="kpis" id="summary"></div>
+    <div id="today-list"></div>
+  </section>
+
+  <section class="view" id="v-clients">
+    <input class="search" id="search" placeholder="🔍 Поиск по имени или номеру...">
+    <div id="clients-list"></div>
+  </section>
+
+  <section class="view" id="v-money">
+    <div class="mnav"><button onclick="shiftMon(-1)">‹</button><b id="mon-name"></b><button onclick="shiftMon(1)">›</button></div>
+    <div id="money"></div>
+  </section>
+
+  <section class="view" id="v-settings">
+    <div class="s-card"><h3>🎨 Акцентный цвет</h3>
+      <div class="swatches">
+        <button class="sw active" data-c="rose" style="--c:#e94560" onclick="setTheme('rose')"><span></span></button>
+        <button class="sw" data-c="violet" style="--c:#8b5cf6" onclick="setTheme('violet')"><span></span></button>
+        <button class="sw" data-c="aqua" style="--c:#22d3ee" onclick="setTheme('aqua')"><span></span></button>
+      </div>
+    </div>
+    <div class="s-card"><h3>💰 Услуги и цены (TMT)</h3>
+      <div id="svc-list"></div>
+      <button class="btn btn-g" onclick="addSvc()">＋ Добавить услугу</button>
+      <div class="hint">Укажите свои цены в манатах. При записи цену можно изменить вручную.</div>
+    </div>
+    <div class="s-card"><h3>📊 За всё время</h3><div class="stats" id="stats"></div></div>
+    <div class="s-card"><h3>💾 Данные</h3>
+      <button class="btn btn-g" onclick="exportData()">📥 Сохранить копию (JSON)</button>
+      <button class="btn btn-g" onclick="document.getElementById('imp').click()">📤 Загрузить копию</button>
+      <input type="file" id="imp" accept=".json" hidden>
+      <button class="btn btn-d" onclick="clearAll()">🗑 Очистить всё</button>
+    </div>
+  </section>
+</main>
+
+<button class="fab" id="fab">+</button>
+<nav class="nav">
+  <button class="nb active" data-v="today"><span class="ic">📅</span>Записи</button>
+  <button class="nb" data-v="clients"><span class="ic">👤</span>Клиенты</button>
+  <button class="nb" data-v="money"><span class="ic">💰</span>Финансы</button>
+  <button class="nb" data-v="settings"><span class="ic">⚙️</span>Ещё</button>
+</nav>
+
+<!-- Запись -->
+<div class="modal" id="m-visit"><div class="sheet">
+  <div class="sheet-head"><h2 id="v-head">Новая запись</h2><button class="close" onclick="closeM()">×</button></div>
+  <form id="visit-form">
+    <input type="hidden" id="v-id">
+    <label class="f"><span>Имя клиента</span><input id="v-name" list="cl-dl" required autocomplete="off"></label>
+    <datalist id="cl-dl"></datalist>
+    <label class="f"><span>Телефон</span><div class="ph"><em>+993</em><input id="v-phone" inputmode="numeric" placeholder="6X XXXXXX"></div></label>
+    <div class="row">
+      <label class="f" style="flex:1"><span>Дата</span><input type="date" id="v-date" required></label>
+      <label class="f" style="flex:1"><span>Время</span><input type="time" id="v-time" required></label>
+    </div>
+    <div class="row">
+      <label class="f" style="flex:1.4"><span>Услуга</span><select id="v-svc"></select></label>
+      <label class="f" style="flex:1"><span>Цена, TMT</span><input type="number" id="v-price" inputmode="decimal" min="0" step="any" placeholder="0"></label>
+    </div>
+    <label class="f"><span>Заметка</span><textarea id="v-note" rows="2" placeholder="Пожелания, цвет, дизайн..."></textarea></label>
+    <button type="submit" class="btn btn-p">✨ Сохранить</button>
+  </form>
+</div></div>
+
+<!-- Клиент -->
+<div class="modal" id="m-client"><div class="sheet">
+  <div class="sheet-head"><h2 id="c-head">Клиент</h2><button class="close" onclick="closeM()">×</button></div>
+  <form id="client-form">
+    <input type="hidden" id="c-id">
+    <label class="f"><span>Имя</span><input id="c-name" required></label>
+    <label class="f"><span>Телефон</span><div class="ph"><em>+993</em><input id="c-phone" inputmode="numeric" placeholder="6X XXXXXX"></div></label>
+    <label class="f"><span>О клиенте</span><textarea id="c-note" rows="2" placeholder="Аллергии, любимый цвет, форма ногтей..."></textarea></label>
+    <button type="submit" class="btn btn-p">✨ Сохранить</button>
+    <button type="button" class="btn btn-d" id="c-del" onclick="delClient()">Удалить клиента</button>
+  </form>
+</div></div>
+
+<!-- Расход -->
+<div class="modal" id="m-exp"><div class="sheet">
+  <div class="sheet-head"><h2>Новый расход</h2><button class="close" onclick="closeM()">×</button></div>
+  <form id="exp-form">
+    <label class="f"><span>Что купили</span><input id="e-name" required placeholder="Гель-лак, пилки, база..."></label>
+    <div class="row">
+      <label class="f" style="flex:1"><span>Сумма, TMT</span><input type="number" id="e-sum" inputmode="decimal" min="0" step="any" required></label>
+      <label class="f" style="flex:1"><span>Дата</span><input type="date" id="e-date" required></label>
+    </div>
+    <label class="f"><span>Категория</span>
+      <select id="e-cat"><option>Материалы</option><option>Инструменты</option><option>Аренда</option><option>Реклама</option><option>Транспорт</option><option>Прочее</option></select>
+    </label>
+    <button type="submit" class="btn btn-p">✨ Сохранить</button>
+  </form>
+</div></div>
+
+<div class="toasts" id="toasts"></div>
+
+<script>
+const L = k => { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } };
+let items = L('nb_data') || [], clients = L('nb_clients') || [], exps = L('nb_exp') || [];
+let svcs = L('nb_svc') || ['Маникюр','Педикюр','Наращивание','Дизайн','Коррекция'].map(n => ({n, p: 0}));
+let theme = localStorage.getItem('nb_theme') || 'rose', view = 'today';
+
+const T = { rose:{c:'#e94560',r:'233,69,96'}, violet:{c:'#8b5cf6',r:'139,92,246'}, aqua:{c:'#22d3ee',r:'34,211,238'} };
+const PAL = ['#e94560','#f5c518','#5eead4','#a78bfa','#60a5fa','#fb923c','#f472b6'];
+const M = ['янв','фев','мар','апр','мая','июн','июл','авг','сен','окт','ноя','дек'];
+const MF = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+const WD = ['вс','пн','вт','ср','чт','пт','сб'];
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const iso = d => d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+const today = () => iso(new Date());
+const pd = s => { const [y,m,d] = s.split('-').map(Number); return new Date(y, m-1, d); };
+const fmtD = s => s === today() ? 'Сегодня' : pd(s).getDate() + ' ' + M[pd(s).getMonth()];
+const fmt = n => (Math.round((+n||0)*100)/100).toLocaleString('ru-RU') + ' TMT';
+const sum = (a, k) => a.reduce((s, x) => s + (+x[k] || 0), 0);
+const digits = v => String(v).replace(/\D/g,'').replace(/^993/,'').slice(0,8);
+const fmtPh = p => p ? p.replace(/^\+993(\d{2})(\d+)/, '+993 $1 $2') : '';
+let date = today(), mon = today().slice(0,7);
+
+function persist() {
+  localStorage.setItem('nb_data', JSON.stringify(items));
+  localStorage.setItem('nb_clients', JSON.stringify(clients));
+  localStorage.setItem('nb_exp', JSON.stringify(exps));
+  localStorage.setItem('nb_svc', JSON.stringify(svcs));
+}
+function save() { persist(); renderAll(); }
+
+function toast(msg, action) {
+  const w = $('toasts'), t = document.createElement('div');
+  t.className = 'toast'; t.innerHTML = '<span>' + msg + '</span>';
+  if (action) { const b = document.createElement('button'); b.className = 'toast-btn'; b.textContent = action.label; b.onclick = () => { action.fn(); t.remove(); }; t.appendChild(b); }
+  w.appendChild(t); setTimeout(() => t.remove(), action ? 5000 : 2500);
+}
+
+function setTheme(n) {
+  theme = n; localStorage.setItem('nb_theme', n); applyTheme();
+  document.querySelectorAll('.sw').forEach(s => s.classList.toggle('active', s.dataset.c === n));
+}
+function applyTheme() {
+  const t = T[theme] || T.rose;
+  document.documentElement.style.setProperty('--acc', t.c);
+  document.documentElement.style.setProperty('--acc-rgb', t.r);
+}
+
+function setView(n) {
+  view = n;
+  document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.id === 'v-' + n));
+  document.querySelectorAll('.nb').forEach(b => b.classList.toggle('active', b.dataset.v === n));
+  $('title').textContent = {today:'Записи', clients:'Клиенты', money:'Финансы', settings:'Ещё'}[n];
+  $('fab').style.display = n === 'settings' ? 'none' : 'flex';
+  $('strip').style.display = n === 'today' ? 'flex' : 'none';
+  const d = new Date();
+  $('eye').textContent = n === 'settings' ? '💅 NailBook' : WD[d.getDay()] + ', ' + d.getDate() + ' ' + M[d.getMonth()];
+  renderAll();
+}
+
+function pick(s) { date = s; renderStrip(); renderToday(); }
+$('jump').onchange = e => { if (e.target.value) pick(e.target.value); };
+
+function renderStrip() {
+  let h = '';
+  const base = pd(date < today() ? date : today());
+  for (let i = -3; i <= 10; i++) {
+    const d = new Date(base); d.setDate(d.getDate() + i);
+    const s = iso(d);
+    h += `<button class="day ${s===date?'active':''} ${s===today()?'today':''}" onclick="pick('${s}')"><div class="d">${WD[d.getDay()]}</div><div class="n">${d.getDate()}</div></button>`;
+  }
+  $('strip').innerHTML = h;
+}
+
+function renderAll() { renderToday(); renderClients(); renderMoney(); renderSettings(); renderStrip(); renderLists(); }
+
+function renderLists() {
+  $('cl-dl').innerHTML = clients.map(c => `<option value="${esc(c.name)}">`).join('');
+}
+
+function renderToday() {
+  const list = items.filter(i => i.date === date).sort((a,b) => a.time.localeCompare(b.time));
+  const inc = sum(list.filter(i => i.done), 'price'), plan = sum(list.filter(i => !i.done), 'price');
+  const ex = sum(exps.filter(e => e.date === date), 'amount');
+  $('summary').innerHTML = `<div class="kpi"><b class="g">${fmt(inc)}</b><small>Доход</small></div><div class="kpi"><b class="y">${fmt(plan)}</b><small>Ожидается</small></div><div class="kpi"><b class="r">${fmt(ex)}</b><small>Расходы</small></div>`;
+  if (!list.length) {
+    $('today-list').innerHTML = `<div class="empty"><div class="empty-emoji">✨</div><div class="empty-title">${date===today()?'Сегодня свободно':'На этот день пусто'}</div><div class="empty-sub">Нажмите «+», чтобы добавить запись</div></div>`;
+    return;
+  }
+  $('today-list').innerHTML = list.map(cardHTML).join('');
+  bindSwipes();
+}
+
+function cardHTML(i) {
+  const si = svcs.findIndex(s => s.n === i.service), col = PAL[(si < 0 ? 0 : si) % PAL.length];
+  const ph = i.phone ? `<button class="act" onclick="event.stopPropagation();location.href='tel:${i.phone}'">📞 ${fmtPh(i.phone)}</button><button class="act" onclick="event.stopPropagation();wa('${i.id}')">💬 WhatsApp</button>` : '';
+  return `<div class="swipe" data-id="${i.id}"><div class="swipe-bg">🗑 Удалить</div>
+    <div class="card ${i.done?'done':''}" style="--stripe:${col}" onclick="editVisit('${i.id}')">
+      <div class="t">${esc(i.time)}</div>
+      <div class="i"><div class="n">${esc(i.name)}</div>
+        <div class="m">${esc(i.service)}<span class="pr">${i.price ? fmt(i.price) : ''}</span></div>
+        ${i.note ? `<div class="note">${esc(i.note)}</div>` : ''}
+        <div class="actions"><button class="act ${i.done?'on':''}" onclick="event.stopPropagation();toggleDone('${i.id}')">${i.done?'✅ Оплачено':'⬜ Отметить оплату'}</button>${ph}</div>
+      </div>
+      <button class="del" onclick="del('${i.id}',event)">×</button>
+    </div></div>`;
+}
+
+function toggleDone(id) {
+  const i = items.find(x => x.id === id); if (!i) return;
+  i.done = !i.done; save(); toast(i.done ? 'Оплата: +' + fmt(i.price) + ' 💰' : 'Отметка снята');
+}
+
+function wa(id) {
+  const i = items.find(x => x.id === id); if (!i) return;
+  const t = `Здравствуйте, ${i.name}! Напоминаю о записи: ${fmtD(i.date)} в ${i.time} (${i.service}). Жду вас 💅`;
+  window.open('https://wa.me/' + i.phone.replace(/\D/g,'') + '?text=' + encodeURIComponent(t));
+}
+
+/* Клиенты */
+function clientStats(c) {
+  const v = items.filter(i => i.name.toLowerCase() === c.name.toLowerCase());
+  const d = v.filter(i => i.done);
+  const last = v.map(i => i.date).sort().pop();
+  return { n: v.length, spent: sum(d, 'price'), last };
+}
+function renderClients() {
+  const q = $('search').value.toLowerCase().trim(), qd = q.replace(/\D/g,'');
+  const f = clients.filter(c => c.name.toLowerCase().includes(q) || (qd && c.phone.includes(qd))).sort((a,b) => a.name.localeCompare(b.name, 'ru'));
+  if (!f.length) { $('clients-list').innerHTML = `<div class="empty"><div class="empty-emoji">👤</div><div class="empty-title">Нет клиентов</div><div class="empty-sub">Нажмите «+», чтобы добавить</div></div>`; return; }
+  $('clients-list').innerHTML = f.map(c => {
+    const s = clientStats(c);
+    return `<div class="swipe"><div class="card" style="--stripe:var(--acc);padding-right:16px" onclick="editClient('${c.id}')">
+      <div class="i"><div class="n">${esc(c.name)}</div>
+      <div class="m">${c.phone ? fmtPh(c.phone) : 'без номера'}</div>
+      <div class="m">Визитов: ${s.n} · Принесла: <span class="g">${fmt(s.spent)}</span>${s.last ? ' · ' + fmtD(s.last) : ''}</div>
+      ${c.note ? `<div class="note">${esc(c.note)}</div>` : ''}
+      ${c.phone ? `<div class="actions"><button class="act" onclick="event.stopPropagation();location.href='tel:${c.phone}'">📞 Позвонить</button><button class="act" onclick="event.stopPropagation();window.open('https://wa.me/${c.phone.replace(/\D/g,'')}')">💬 WhatsApp</button></div>` : ''}
+      </div></div></div>`;
+  }).join('');
+}
+function upsertClient(o) {
+  let c = clients.find(x => x.name.toLowerCase() === o.name.toLowerCase());
+  if (!c) clients.push({ id: Date.now().toString() + 'c', name: o.name, phone: o.phone, note: '' });
+  else if (o.phone) c.phone = o.phone;
+}
+
+/* Финансы */
+function shiftMon(d) {
+  const [y, m] = mon.split('-').map(Number), n = new Date(y, m - 1 + d, 1);
+  mon = iso(n).slice(0,7); renderMoney();
+}
+function group(arr, key, val) {
+  const g = {}; arr.forEach(x => { const k = x[key] || 'Прочее'; g[k] = g[k] || {n:0, s:0}; g[k].n++; g[k].s += +x[val] || 0; });
+  return Object.entries(g).sort((a,b) => b[1].s - a[1].s);
+}
+function renderMoney() {
+  const [y, m] = mon.split('-').map(Number), dim = new Date(y, m, 0).getDate();
+  $('mon-name').textContent = MF[m-1] + ' ' + y;
+  const mi = items.filter(i => i.date.startsWith(mon)), done = mi.filter(i => i.done), me = exps.filter(e => e.date.startsWith(mon));
+  const inc = sum(done, 'price'), ex = sum(me, 'amount'), plan = sum(mi.filter(i => !i.done), 'price'), profit = inc - ex;
+  const days = Array.from({length: dim}, (_, k) => sum(done.filter(i => +i.date.slice(8) === k + 1), 'price'));
+  const mx = Math.max(...days, 1);
+  const bars = days.map((v, k) => `<div class="bar"><i style="height:${v/mx*100*0.8}%"></i><b>${k+1}</b></div>`).join('');
+  const sv = group(done, 'service', 'price'), ec = group(me, 'category', 'amount');
+  const row = (n, s, c, tot, cls) => `<div><div class="line"><span>${esc(n)} <small>${c ? '×' + c : ''}</small></span><b class="${cls}">${fmt(s)}</b></div><div class="meter"><i style="width:${tot ? s/tot*100 : 0}%"></i></div></div>`;
+  const dayRows = Object.entries(me.reduce((a, e) => (a[e.date] = 1, a), {})).length; // не используется
+  $('money').innerHTML = `
+    <div class="kpis2">
+      <div class="kpi"><b class="g">${fmt(inc)}</b><small>Доход за месяц</small></div>
+      <div class="kpi"><b class="r">${fmt(ex)}</b><small>Расходы</small></div>
+      <div class="kpi"><b class="${profit>=0?'g':'r'}">${fmt(profit)}</b><small>Чистая прибыль</small></div>
+      <div class="kpi"><b class="y">${fmt(plan)}</b><small>Ещё ожидается</small></div>
+    </div>
+    <div class="s-card"><h3>📊 Сводка за месяц</h3>
+      <div class="line"><span>Записей / оплачено</span><b>${mi.length} / ${done.length}</b></div>
+      <div class="line"><span>Средний чек</span><b>${fmt(done.length ? inc/done.length : 0)}</b></div>
+      <div class="line"><span>Новых клиентов за месяц</span><b>${new Set(done.map(i=>i.name.toLowerCase()).filter(n => !items.some(o => o.name.toLowerCase()===n && o.date < mon + '-01'))).size}</b></div>
+      <div class="line"><span>Доход в рабочий день</span><b>${fmt(new Set(done.map(i=>i.date)).size ? inc/new Set(done.map(i=>i.date)).size : 0)}</b></div>
+    </div>
+    <div class="s-card"><h3>📈 Доход по дням</h3><div class="bars">${bars}</div></div>
+    <div class="s-card"><h3>💅 Доход по услугам</h3>${sv.length ? sv.map(([n,v]) => row(n, v.s, v.n, inc, 'g')).join('') : '<div class="hint">Пока нет оплаченных записей</div>'}</div>
+    <div class="s-card"><h3>🧴 Расходы по категориям</h3>${ec.length ? ec.map(([n,v]) => row(n, v.s, v.n, ex, 'r')).join('') : '<div class="hint">Расходов нет. Нажмите «+», чтобы добавить</div>'}</div>
+    <div class="s-card"><h3>🧾 Список расходов</h3>${me.length ? me.sort((a,b) => b.date.localeCompare(a.date)).map(e => `<div class="line"><span>${esc(e.name)}<br><small>${fmtD(e.date)} · ${esc(e.category)}</small></span><span><b class="r">−${fmt(e.amount)}</b> <button class="x" onclick="delExp('${e.id}')">×</button></span></div>`).join('') : '<div class="hint">—</div>'}</div>`;
+}
+function delExp(id) {
+  const k = exps.findIndex(e => e.id === id); if (k < 0) return;
+  const rm = exps.splice(k, 1)[0]; save(); toast('Расход удалён', {label:'Отменить', fn:() => { exps.push(rm); save(); }});
+}
+
+/* Настройки */
+function renderSettings() {
+  $('svc-list').innerHTML = svcs.map((s, i) => `<div class="row sv"><input value="${esc(s.n)}" onchange="svcs[${i}].n=this.value.trim()||svcs[${i}].n;persist()"><input type="number" inputmode="decimal" min="0" step="any" value="${s.p}" onchange="svcs[${i}].p=+this.value||0;persist()"><button class="close" onclick="delSvc(${i})">×</button></div>`).join('');
+  $('stats').innerHTML = `<div class="stat"><div class="n">${items.length}</div><div class="l">Записей</div></div><div class="stat"><div class="n">${clients.length}</div><div class="l">Клиентов</div></div><div class="stat"><div class="n g">${fmt(sum(items.filter(i=>i.done),'price'))}</div><div class="l">Доход всего</div></div><div class="stat"><div class="n r">${fmt(sum(exps,'amount'))}</div><div class="l">Расходы всего</div></div>`;
+}
+function addSvc() { svcs.push({n:'Новая услуга', p:0}); persist(); renderSettings(); }
+function delSvc(i) { if (svcs.length > 1 && confirm('Удалить услугу «' + svcs[i].n + '»?')) { svcs.splice(i, 1); persist(); renderSettings(); } }
+
+/* Свайп-удаление */
+function bindSwipes() {
+  document.querySelectorAll('#today-list .swipe').forEach(w => {
+    const card = w.querySelector('.card');
+    let x = 0, y = 0, dx = 0, on = false, axis = null;
+    w.addEventListener('touchstart', e => { if (e.touches.length !== 1) return; x = e.touches[0].clientX; y = e.touches[0].clientY; dx = 0; on = true; axis = null; card.style.transition = 'none'; }, {passive:true});
+    w.addEventListener('touchmove', e => {
+      if (!on) return;
+      const mx = e.touches[0].clientX - x, my = e.touches[0].clientY - y;
+      if (axis === null && (Math.abs(mx) > 8 || Math.abs(my) > 8)) axis = Math.abs(mx) > Math.abs(my) ? 'x' : 'y';
+      if (axis !== 'x') return;
+      if (e.cancelable) e.preventDefault();
+      w.classList.add('dragging'); dx = mx < 0 ? mx : mx * .15; card.style.transform = `translateX(${dx}px)`;
+    }, {passive:false});
+    const end = () => {
+      if (!on) return; on = false;
+      if (dx < -90) { card.style.transition = 'transform .2s'; card.style.transform = 'translateX(-120%)'; setTimeout(() => del(w.dataset.id), 150); }
+      else { card.style.transition = 'transform .3s'; card.style.transform = 'none'; w.classList.remove('dragging'); }
+    };
+    w.addEventListener('touchend', end, {passive:true}); w.addEventListener('touchcancel', end, {passive:true});
+  });
+}
+function del(id, e) {
+  if (e) e.stopPropagation();
+  const k = items.findIndex(i => i.id === id); if (k < 0) return;
+  const rm = items.splice(k, 1)[0]; save();
+  toast('Запись удалена 🗑', {label:'Отменить', fn:() => { items.push(rm); save(); }});
+}
+
+/* Окна */
+function openM(id) { document.querySelectorAll('.modal').forEach(m => m.classList.remove('open')); $(id).classList.add('open'); }
+function closeM() { document.querySelectorAll('.modal').forEach(m => m.classList.remove('open')); }
+document.querySelectorAll('.modal').forEach(m => m.onclick = e => { if (e.target === m) closeM(); });
+
+function fillSvc(sel) {
+  const opts = svcs.map(s => `<option value="${esc(s.n)}">${esc(s.n)}${s.p ? ' — ' + s.p + ' TMT' : ''}</option>`);
+  if (sel && !svcs.some(s => s.n === sel)) opts.unshift(`<option value="${esc(sel)}">${esc(sel)}</option>`);
+  $('v-svc').innerHTML = opts.join(''); if (sel) $('v-svc').value = sel;
+}
+function newVisit() {
+  $('v-head').textContent = 'Новая запись'; $('visit-form').reset();
+  $('v-id').value = ''; $('v-date').value = date; $('v-time').value = '12:00';
+  fillSvc(); $('v-price').value = svcs[0].p || ''; openM('m-visit');
+}
+function editVisit(id) {
+  const i = items.find(x => x.id === id); if (!i) return;
+  $('v-head').textContent = 'Редактировать запись'; fillSvc(i.service);
+  $('v-id').value = i.id; $('v-name').value = i.name; $('v-phone').value = digits(i.phone || '');
+  $('v-date').value = i.date; $('v-time').value = i.time; $('v-price').value = i.price || ''; $('v-note').value = i.note || '';
+  openM('m-visit');
+}
+$('v-svc').onchange = () => { const s = svcs.find(x => x.n === $('v-svc').value); if (s) $('v-price').value = s.p || ''; };
+$('v-name').oninput = () => { const c = clients.find(x => x.name.toLowerCase() === $('v-name').value.trim().toLowerCase()); if (c && c.phone) $('v-phone').value = digits(c.phone); };
+[$('v-phone'), $('c-phone')].forEach(el => el.oninput = () => { const d = digits(el.value); el.value = d.length > 2 ? d.slice(0,2) + ' ' + d.slice(2) : d; });
+
+$('visit-form').onsubmit = e => {
+  e.preventDefault();
+  const d = digits($('v-phone').value);
+  if (d && d.length !== 8) return toast('Номер: 8 цифр после +993 ⚠️');
+  const id = $('v-id').value || Date.now().toString(), old = items.find(i => i.id === id);
+  const o = { id, name: $('v-name').value.trim(), phone: d ? '+993' + d : '', date: $('v-date').value, time: $('v-time').value, service: $('v-svc').value, price: +$('v-price').value || 0, note: $('v-note').value.trim(), done: old ? !!old.done : false };
+  if (old) Object.assign(old, o); else items.push(o);
+  upsertClient(o); date = o.date; save(); closeM(); toast('Сохранено 💅');
+};
+
+function newClient() { $('c-head').textContent = 'Новый клиент'; $('client-form').reset(); $('c-id').value = ''; $('c-del').style.display = 'none'; openM('m-client'); }
+function editClient(id) {
+  const c = clients.find(x => x.id === id); if (!c) return;
+  $('c-head').textContent = 'Клиент'; $('c-id').value = c.id; $('c-name').value = c.name;
+  $('c-phone').value = digits(c.phone || ''); $('c-phone').oninput(); $('c-note').value = c.note || ''; $('c-del').style.display = 'block'; openM('m-client');
+}
+$('client-form').onsubmit = e => {
+  e.preventDefault();
+  const d = digits($('c-phone').value);
+  if (d && d.length !== 8) return toast('Номер: 8 цифр после +993 ⚠️');
+  const id = $('c-id').value, o = { name: $('c-name').value.trim(), phone: d ? '+993' + d : '', note: $('c-note').value.trim() };
+  const c = clients.find(x => x.id === id);
+  if (c) { items.forEach(i => { if (i.name.toLowerCase() === c.name.toLowerCase()) { i.name = o.name; if (o.phone) i.phone = o.phone; } }); Object.assign(c, o); }
+  else clients.push({ id: Date.now().toString() + 'c', ...o });
+  save(); closeM(); toast('Клиент сохранён 👤');
+};
+function delClient() {
+  const c = clients.find(x => x.id === $('c-id').value);
+  if (c && confirm('Удалить контакт «' + c.name + '»? Записи останутся.')) { clients = clients.filter(x => x !== c); save(); closeM(); }
+}
+
+function newExp() { $('exp-form').reset(); $('e-date').value = view === 'money' && mon !== today().slice(0,7) ? mon + '-01' : today(); openM('m-exp'); }
+$('exp-form').onsubmit = e => {
+  e.preventDefault();
+  exps.push({ id: Date.now().toString(), name: $('e-name').value.trim(), amount: +$('e-sum').value || 0, date: $('e-date').value, category: $('e-cat').value });
+  save(); closeM(); toast('Расход добавлен 🧴');
+};
+
+$('fab').onclick = () => ({today:newVisit, clients:newClient, money:newExp}[view] || (() => {}))();
+
+/* Данные */
+function exportData() {
+  const b = new Blob([JSON.stringify({items, clients, exps, svcs}, null, 2)], {type:'application/json'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'nailbook-' + today() + '.json'; a.click();
+  toast('Копия сохранена 📥');
+}
+$('imp').onchange = e => {
+  const f = e.target.files[0]; if (!f) return;
+  const r = new FileReader();
+  r.onload = () => {
+    try {
+      const d = JSON.parse(r.result), ok = Array.isArray(d) ? { items: d } : d;
+      if (!Array.isArray(ok.items)) throw 0;
+      if (!confirm('Заменить текущие данные загруженной копией?')) return;
+      items = ok.items; clients = ok.clients || []; exps = ok.exps || []; if (ok.svcs && ok.svcs.length) svcs = ok.svcs;
+      items.forEach(i => { i.price = +i.price || 0; }); items.forEach(upsertClient);
+      save(); toast('Данные загружены ✅');
+    } catch (x) { toast('Файл не подходит ⚠️'); }
+  };
+  r.readAsText(f); e.target.value = '';
+};
+function clearAll() { if (confirm('Удалить ВСЕ данные?')) { items = []; clients = []; exps = []; save(); toast('Всё удалено 🧹'); } }
+
+$('search').oninput = renderClients;
+document.querySelectorAll('.nb').forEach(b => b.onclick = () => setView(b.dataset.v));
+
+items.forEach(i => { i.price = +i.price || 0; });
+items.forEach(upsertClient); persist();
+applyTheme(); setView('today');
+document.querySelectorAll('.sw').forEach(s => s.classList.toggle('active', s.dataset.c === theme));
+setTimeout(() => { const n = items.filter(i => i.date === today()).length; if (n) toast('Сегодня записей: ' + n + ' 💅'); }, 800);
+</script>
+</body>
+</html>
