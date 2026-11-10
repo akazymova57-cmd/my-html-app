@@ -1,0 +1,38 @@
+name: Build APK from HTML
+on: [push, workflow_dispatch]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: npm install -g cordova
+
+      - name: Create Cordova project
+        run: |
+          cordova create myapp com.example.myapp MyApp
+          cp index.html myapp/www/index.html
+
+      - name: Add Android platform
+        run: |
+          cd myapp
+          cordova platform add android
+
+      - name: Build APK
+        run: |
+          cd myapp
+          cordova build android
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-debug
+          path: myapp/platforms/android/app/build/outputs/apk/debug/*.apk
